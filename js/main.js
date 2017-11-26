@@ -62,18 +62,27 @@ function create(){
   	//var graphics=game.add.graphics(0,0);
   	cursors = game.input.keyboard.createCursorKeys(); 
   	this.game.input.keyboard.onPressCallback = function(e) {
-  		console.log(e);
+  		//console.log(e);
 
   		if (waitForKeys && e==keyToPress)   {
   			game.paused = false;
   			noteToKill.kill();
 
   		}
-
   		
-  		//console.log(keyCode);
 
 
+  	};
+
+  	this.game.input.keyboard.onDownCallback = function(e){
+  		console.log(e);
+  		keyToColor = keyboardKeys.indexOf(e.key);
+  		keys.children[keyToColor].tint = 0xf10f2f;
+  	};
+
+  	this.game.input.keyboard.onUpCallback = function(e){
+  		keyToUncolor = keyboardKeys.indexOf(e.key);
+  		keys.children[keyToUncolor].tint = 0xffffff;
   	};
 
   	waitForKeys = false;
