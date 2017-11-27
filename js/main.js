@@ -3,6 +3,7 @@ var game = new Phaser.Game(800, 800, Phaser.AUTO, 'canvas',
 
 function preload(){
 	game.load.image('white-key', 'assets/img/white.png');
+	game.load.audio('audio', ['assets/aud/audio.mp3','assets/aud/keys.ogg'] )
 
 //  this.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
 	//this.scale.pageAlignHorizontally = true;
@@ -21,6 +22,8 @@ var keyCode = {a:65,s:83,d:68,f:70,g:71,h:72,j:74,k:75,l:76,č:0,"c":49,"v":50,"
 var keyboardKeys = ['a','s','d','f','g','h','j','k','l','č','c','v','b','n','m']; 
 var waitForKeys;
 var keyToPress;
+
+var points = 0;
 function create(){
 	game.stage.backgroundColor = '#124184';
 	game.physics.startSystem(Phaser.Physics.ARCADE);
@@ -67,7 +70,7 @@ function create(){
   		if (waitForKeys && e==keyToPress)   {
   			game.paused = false;
   			noteToKill.kill();
-
+  			points++;
   		}
   		
 
@@ -92,6 +95,8 @@ function create(){
     	waitForKeys = !waitForKeys;
     	toggleMode.text = waitForKeys ? 'Čakaj: DA' : 'Čakaj: NE';
     });
+
+    pointsText = game.add.text(game.world.width-120, 50, 'Točke: 0', { font: '24px Arial', fill: '#fff' });
 
 }
 
@@ -136,6 +141,8 @@ function update (){
             appearanceTime = game.time.now + game.rnd.integerInRange(500,2000);
 
     }
+
+    pointsText.text = 'Točke: ' + points;
 
 
 
