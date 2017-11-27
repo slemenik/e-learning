@@ -3,7 +3,7 @@ var game = new Phaser.Game(800, 800, Phaser.AUTO, 'canvas',
 
 function preload(){
 	game.load.image('white-key', 'assets/img/white.png');
-	game.load.audio('audio', ['assets/aud/audio.mp3','assets/aud/keys.ogg'] )
+	game.load.audio('audio', 'assets/aud/audio.mp3' );
 
 //  this.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
 	//this.scale.pageAlignHorizontally = true;
@@ -17,9 +17,12 @@ var keys;
 var notes;
 var line1;
 
+var audio;
+
 // var keyCode = {"a", "s", "d","f","g","h","j","k","l","1","2","3","4","5"};
 var keyCode = {a:65,s:83,d:68,f:70,g:71,h:72,j:74,k:75,l:76,č:0,"c":49,"v":50,"b":51,"n":52,"m":53};
 var keyboardKeys = ['a','s','d','f','g','h','j','k','l','č','c','v','b','n','m']; 
+var pianoKeys = ['C','C#', 'D', 'D#','E','F', 'F#','G', 'G#', 'A', 'A#', 'H'];
 var waitForKeys;
 var keyToPress;
 
@@ -39,7 +42,8 @@ function create(){
     for (var i = 0; i<15;i++ ){	
 	 	keyHeight = keyData.height;
 		var key = keys.create(position,game.world.height-keyHeight/2,'white-key');
-		keytext = game.add.text(key.x + 10,key.y + 10, keyboardKeys[i]);
+		game.add.text(key.x + 10,key.y + 10, keyboardKeys[i]);
+		game.add.text(key.x + 5,key.y + 80, pianoKeys[i%12]);
 		key.inputEnabled = true;
 		key.events.onInputDown.add( listener, key );
 		key.name = "key" + i;
@@ -73,12 +77,15 @@ function create(){
   			points++;
   		}
   		
-
+  		//audio.play('Tone' + game.rnd.integerInRange(0,88));
+  		//28 je MIDDLE C
+  		keyNumber = keyboardKeys.indexOf(e);
+  		audio.play('Tone' + (keyNumber + 28 + 12));
 
   	};
 
   	this.game.input.keyboard.onDownCallback = function(e){
-  		console.log(e);
+  		//console.log(e);
   		keyToColor = keyboardKeys.indexOf(e.key);
   		keys.children[keyToColor].tint = 0xf10f2f;
   	};
@@ -97,6 +104,19 @@ function create(){
     });
 
     pointsText = game.add.text(game.world.width-120, 50, 'Točke: 0', { font: '24px Arial', fill: '#fff' });
+
+    audio = game.add.audio('audio');
+    audio.allowMultiple = true;
+
+    fromMarker = 0;
+    for (i = 0; i<88; i++) {
+    	audio.addMarker('Tone' + i, fromMarker, 1.9);
+    	fromMarker += 2;
+    } 
+
+}
+
+function makeAudioArray(){
 
 }
 
