@@ -114,11 +114,51 @@ function create(){
     	fromMarker += 2;
     } 
 
+
+    //read MIDI
+    MidiConvert.load("assets/aud/narcotic.mid", function(midi) {
+  		
+
+		
+    	console.log(midi)
+		//midi = [1,2,3,4,5,6,7];
+		//audio.onStop.add(playNext, this, 0, midi.tracks[6].notes);
+
+		for (var i = 0; i<midi.tracks.length;i++) {
+			console.log(midi.tracks[i].name, midi.tracks[i].notes.length);
+			track = midi.tracks[i];
+			if (track.channelNumber == 2 || track.channelNumber == 6) {
+				game.time.events.repeat(1000 * 0.2, 1000, playNext, this, track.notes);
+			}
+
+		}
+
+		
+   	});
+
+  	
+
 }
 
 function makeAudioArray(){
 
 }
+
+var indexToPlay = 0;
+
+function playNext(midi){
+	//console.log(element, tone, midi);
+	toneNum = midi.shift().midi;
+	if (toneNum){
+		audio.play('Tone' + (toneNum-16));
+		// midi.shift();
+		// midi.shift();
+		// midi.shift();
+	}
+	
+}
+
+
 
 function listener () {
 
@@ -167,3 +207,5 @@ function update (){
 
 
 }
+
+
