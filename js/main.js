@@ -116,7 +116,7 @@ function create(){
 
 
     //read MIDI
-    MidiConvert.load("assets/aud/narcotic.mid", function(midi) {
+    MidiConvert.load("assets/aud/mario.mid", function(midi) {
   		
 
 		
@@ -124,15 +124,32 @@ function create(){
 		//midi = [1,2,3,4,5,6,7];
 		//audio.onStop.add(playNext, this, 0, midi.tracks[6].notes);
 
-		for (var i = 0; i<midi.tracks.length;i++) {
-			console.log(midi.tracks[i].name, midi.tracks[i].notes.length);
-			track = midi.tracks[i];
-			if (track.channelNumber == 2 || track.channelNumber == 6) {
-				game.time.events.repeat(1000 * 0.2, 1000, playNext, this, track.notes);
-			}
+		// for (var i = 0; i<midi.tracks.length;i++) {
+		// 	console.log(midi.tracks[i].name, midi.tracks[i].notes.length);
+		// 	track = midi.tracks[i];
+		// 	if (i == 2) {
+		// 		game.time.events.repeat(1000 * 0.3, 1000, playNext, this, track.notes);
+		// 	}
 
+		// }
+		for (var j = 2; j<=3;j++){
+			midiNotes = midi.tracks[j].notes;
+			max = -1;
+			min = 89;//55-36 = 19 84-36=48
+		for (var i = 0; i<midiNotes.length;i++) {
+			
+			if (midiNotes[i].midi > max) max = midiNotes[i].midi;
+			if (midiNotes[i].midi < min) min = midiNotes[i].midi;
+			game.time.events.add(500* (midiNotes[i].time), function(midiNote){
+				
+				audio.play('Tone' + (midiNote.midi-18));
+				//console.log(midiNote);
+				//if (audio._sound) audio._sound.playbackRate.value = 3;
+			}, this, midiNotes[i]);
 		}
-
+		console.log(min, max);
+		}
+		
 		
    	});
 
@@ -150,8 +167,8 @@ function playNext(midi){
 	//console.log(element, tone, midi);
 	toneNum = midi.shift().midi;
 	if (toneNum){
-		audio.play('Tone' + (toneNum-16));
-		// midi.shift();
+		audio.play('Tone' + (toneNum-24));
+		 midi.shift();
 		// midi.shift();
 		// midi.shift();
 	}
