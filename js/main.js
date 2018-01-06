@@ -1,5 +1,4 @@
-var game = new Phaser.Game(1300, 800, Phaser.AUTO, 'canvas', 
-	{ preload: preload, create: create, update: update });
+var playState = { preload: preload, create: create, update: update };
 
 function preload(){
 	game.load.image('white-key', 'assets/img/white.png');
@@ -25,7 +24,8 @@ var audio;
 
 // var keyCode = {"a", "s", "d","f","g","h","j","k","l","1","2","3","4","5"};
 //var keyCode = {a:65,s:83,d:68,f:70,g:71,h:72,j:74,k:75,l:76,č:0,"c":49,"v":50,"b":51,"n":52,"m":53};
-var keyboardKeys = [' ',' ',' ',' ',' ','1','2','3','4','5','6','7','8','9','0',"'",'+', 'q','w','e','r','t','z','u','i','o','p','a','s','d','f','g','h','j','k','l','c','v','b','n','m']; 
+var keyboardKeys = [' ',' ',' ',' ',' ','1','2','3','4','5','6','7','8','9','0',"'",'+', 'q','w','e','r','t','z','u',
+					'i','o','p','a','s','d','f','g','h','j','k','l','c','v','b','n','m'];
 var pianoKeys = ['C','C#', 'D', 'D#','E','F', 'F#','G', 'G#', 'A', 'A#', 'H'];
 var waitForKeys;
 var keyToPress;
