@@ -1,4 +1,4 @@
-var playState = { preload: preload, create: create, update: update };
+var playState = { preload: preload, create: create, update: update, init:init};
 
 function preload(){
 	game.load.image('white-key', 'assets/img/white.png');
@@ -7,13 +7,7 @@ function preload(){
 	game.load.image('middle-key', 'assets/img/middle-small.png');
 	game.load.image('black-key', 'assets/img/black.png');
 	game.load.audio('audio', 'assets/aud/audio.mp3' );
-
-//  this.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
-	//this.scale.pageAlignHorizontally = true;
-	//this.scale.pageAlignVertically = true;
-	//this.scale.setScreenSize( true );
 }
-
 
 var keyData;
 var keys;
@@ -34,12 +28,17 @@ var sizeMidiMap = {};
 var octavesCount = 4;
 var minMaxOctave = {mario:[43, 84]};
 var lowerOctaveFor = 2;
-var TEMPSONG = 'mario';
-var song = TEMPSONG;
+var songs = ['mario'];
 
 var positionArray = [0];
 
 var points = 0;
+var songName;
+
+function init(level) {
+    songName = songs[level];
+}
+
 function create(){
 	game.stage.backgroundColor = '#124184';
 	game.physics.startSystem(Phaser.Physics.ARCADE);
@@ -69,16 +68,16 @@ function create(){
 			game.add.text(key.x + 5,key.y + 10, keyboardKeys[index], {fill: textColor});
 			game.add.text(key.x + 5,key.y + 80, pianoKeys[i%12], {fill: textColor, font: "bold 16px Arial"});
 			game.add.text(key.x + 5,key.y + 120, 
-				getOctaveNumber(minMaxOctave[song][0]-(lowerOctaveFor*8))+ index, {font: "bold 16px Arial"});
-			sizeMidiMap[(getOctaveNumber(minMaxOctave[song][0]-(lowerOctaveFor*8))+ index)] = keyName;
+				getOctaveNumber(minMaxOctave[songName][0]-(lowerOctaveFor*8))+ index, {font: "bold 16px Arial"});
+			sizeMidiMap[(getOctaveNumber(minMaxOctave[songName][0]-(lowerOctaveFor*8))+ index)] = keyName;
 
 			key.inputEnabled = true;
 			//key.events.onInputDown.add( listener, key );
 			key.name = "key" + i;
 			//key.scale.setTo(0.5);
 
-			graphics.moveTo(position,0);//moving position of graphic if you draw mulitple lines
-	  		graphics.lineTo(position,game.world.height-keyHeight);
+			graphics.moveTo(position-1,0);//moving position of graphic if you draw mulitple lines
+	  		graphics.lineTo(position-1,game.world.height-keyHeight);
 
 			position += keyData.width;
 			positionArray.push(position);
@@ -87,8 +86,8 @@ function create(){
 	  		index++;
 		}
 	}
-	graphics.moveTo(position,0);//moving position of graphic if you draw mulitple lines
-  	graphics.lineTo(position,game.world.height-keyHeight/2);
+	graphics.moveTo(position-1,0);//moving position of graphic if you draw mulitple lines
+  	graphics.lineTo(position-1,game.world.height-keyHeight/2);
 
 	notes = game.add.group();
 	notes.enableBody = true;
@@ -179,7 +178,7 @@ function create(){
 					
 					audio.play('Tone' + (midiNote.midi-(lowerOctaveFor*8)));
 
-					positionNum = positionArray[midiNote.midi - getOctaveNumber(minMaxOctave[song][0])] ;
+					positionNum = positionArray[midiNote.midi - getOctaveNumber(minMaxOctave[songName][0])] ;
 					console.log('Tone' + (midiNote.midi-(lowerOctaveFor*8)));
 					var note = notes.create(positionNum, 580, sizeMidiMap[
 						(midiNote.midi-(lowerOctaveFor*8))]);
