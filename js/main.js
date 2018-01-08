@@ -19,8 +19,8 @@ var audio;
 
 // var keyCode = {"a", "s", "d","f","g","h","j","k","l","1","2","3","4","5"};
 //var keyCode = {a:65,s:83,d:68,f:70,g:71,h:72,j:74,k:75,l:76,č:0,"c":49,"v":50,"b":51,"n":52,"m":53};
-var keyboardKeys = [' ',' ',' ',' ',' ','1','2','3','4','5','6','7','8','9','0',"'",'+', 'q','w','e','r','t','z','u',
-					'i','o','p','a','s','d','f','g','h','j','k','l','c','v','b','n','m'];
+var keyboardKeys = [' ',' ',' ',' ',' ','1','2','3','4','5','6','7','8','9','0','+', 'q','w','e','r','t','z','u',
+					'i','o','p','a','s','d','f','g','h','j','k','l','c','v','b','n','m', ',','.','-'];
 var pianoKeys = ['C','C#', 'D', 'D#','E','F', 'F#','G', 'G#', 'A', 'A#', 'H'];
 var waitForKeys;
 var keyToPress;
@@ -56,7 +56,7 @@ function create(){
 	game.physics.startSystem(Phaser.Physics.ARCADE);
 	//game.stage.disableVisibilityChange = true;//ko greš iz okna se igra nadaljuje
 
-    addMenuOption('Naslednji nivo: ' + (level + 1), function (target) {
+    addMenuOption1('Naslednji nivo: ' + (level + 1), function (target) {
         game.paused = false;
     	game.state.start('play', true, false, level+1);
     });
@@ -86,15 +86,17 @@ function create(){
 			var key = keys.create(position,game.world.height-whiteKeyHeight,keyName);
 
 			textColor = keyType == 1 ? '#fff' : '#000';
-			game.add.text(key.x + 5,key.y + 10, keyboardKeys[index], {fill: textColor});
-			game.add.text(key.x + 5,key.y + 80, pianoKeys[i%12], {fill: textColor, font: "bold 16px Arial"});
+			game.add.text(key.x + 5,key.y + 10, keyboardKeys[index], {fill: textColor}); //asdfg
+			game.add.text(key.x + 5,key.y + 80, pianoKeys[i%12], {fill: textColor, font: "bold 16px Arial"});//cdefg
 			game.add.text(key.x + 5,key.y + 120, 
-				getOctaveNumber(minMaxOctave[songName][0]-(lowerOctaveFor*8))+ index, {font: "bold 16px Arial"});
+				getOctaveNumber(minMaxOctave[songName][0]-(lowerOctaveFor*8))+ index, {font: "bold 16px Arial"});//24,25,26
+				// console.log(lowerOctaveFor);
 			sizeMidiMap[(getOctaveNumber(minMaxOctave[songName][0]-(lowerOctaveFor*8))+ index)] = keyName;
 
 			key.inputEnabled = true;
 			//key.events.onInputDown.add( listener, key );
 			key.name = "key" + i;
+			console.log(key.name);
 			//key.scale.setTo(0.5);
 
 			graphics.moveTo(position-1,0);//moving position of graphic if you draw mulitple lines
@@ -112,7 +114,7 @@ function create(){
 
 	notes = game.add.group();
 	notes.enableBody = true;
-
+	// console.log(positionArray);
 	
 	//for(var i = 0; i < 15;);
 
@@ -120,14 +122,16 @@ function create(){
   	//var graphics=game.add.graphics(0,0);
   	cursors = game.input.keyboard.createCursorKeys(); 
   	this.game.input.keyboard.onPressCallback = function(e) {
-  		//console.log(e);
+  		// console.log(e);
 
   		if (waitForKeys && e==keyToPress)   {
   			game.paused = false;
   			noteToKill.kill();
   			points++;
-  		}
-  		
+  		} else if(waitForKeys && e != keyToPress){
+  			points--;
+		}
+        pointsText.text = 'Točke: ' + points;
   		audio.play('Tone' + game.rnd.integerInRange(0,88));
   		//28 je MIDDLE C
   		keyNumber = keyboardKeys.indexOf(e);
@@ -165,9 +169,9 @@ function create(){
     for (i = 0; i<88; i++) {
     	audio.addMarker('Tone' + i, fromMarker, 1.9);
     	fromMarker += 2;
-    } 
+    }
 
-
+    // console.log(lowerOctaveFor);
     //read MIDI
     MidiConvert.load("assets/aud/"+songName+".mid", function(midi) {
 
@@ -194,20 +198,22 @@ function create(){
 					}
 
 					positionNum = positionArray[midiNote.midi - getOctaveNumber(minMaxOctave[songName][0])] ;
+					// console.log(positionNum);
 					 // console.log('Tone' + (midiNote.midi-(lowerOctaveFor*8)));
 
 					//spodnja se uporabi ko se toni premikajo navzgor
 					// var note = notes.create(positionNum, game.height-whiteKeyHeight-(whiteKeyHeight/10),	sizeMidiMap[(midiNote.midi-(lowerOctaveFor*8))]);
                     var note = notes.create(positionNum, 0, sizeMidiMap[(midiNote.midi-(lowerOctaveFor*8))]);
 
-                    // console.log(note.name)
-					note.scale.setTo(1, 0.1);
+
+					note.scale.setTo(1, 0.2);
 					game.physics.arcade.enable(note);
-					note.body.velocity.y = 100;
+					note.body.velocity.y = 150;
 					note.body.collideWorldBounds = false;
 					
 					note.tint = tint;
-					note.name = "note" + positionNum;
+					note.name = "note" + (midiNote.midi-(lowerOctaveFor*8)-getOctaveNumber(minMaxOctave[songName][0]-(lowerOctaveFor*8)));
+                     // console.log(lowerOctaveFor)
 					note.events.onKilled.add(function(note){
 						notes.remove(note)
 					},this);
@@ -247,12 +253,13 @@ function update (){
 
 	//game.physics.arcade.collide(notes, keys);
 	game.physics.arcade.collide(notes, keys, 
-		function(note, keys){ 
+		function(note, keys){
+		console.log(note,keys);
 			if (waitForKeys){
 				 game.paused = true;
 				// game.physics.arcade.isPaused = true;
 				keyToPress = keyboardKeys[note.name.substring(4)];
-                // console.log("colli: " + note.name);
+                // console.log("colli: " + (note.name.substring(4)%12));
 				noteToKill = note;
 				// console.log(game.physics);
 
@@ -273,7 +280,7 @@ function update (){
 
 }
 
-function addMenuOption(text, callback) {
+function addMenuOption1(text, callback) {
     var optionStyle = { font: '25pt menuFont', fill: 'white', align: 'right', stroke: 'rgba(0,0,0,0)', strokeThickness: 4};
     var txt = game.add.text(game.world.width-220, 300, text, optionStyle);
     var onOver = function (target) {
@@ -290,5 +297,5 @@ function addMenuOption(text, callback) {
     txt.events.onInputUp.add(callback);
     txt.events.onInputOver.add(onOver);
     txt.events.onInputOut.add(onOut);
-    }
+}
 
