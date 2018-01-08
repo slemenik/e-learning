@@ -25,6 +25,7 @@ function init() {
         align: 'center'
     });
     this.titleText.anchor.set(0.5);
+    game.state.start('play', true, false, 0);//temp
 }
 
 function preload() {

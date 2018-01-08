@@ -6,6 +6,7 @@ function preload(){
 	game.load.image('right-key', 'assets/img/right-small.png');
 	game.load.image('middle-key', 'assets/img/middle-small.png');
 	game.load.image('black-key', 'assets/img/black.png');
+	game.load.image('mario-sheet-1', 'assets/img/mario1.PNG');
 	game.load.audio('audio', 'assets/aud/audio.mp3' );
 }
 
@@ -28,22 +29,42 @@ var sizeMidiMap = {};
 var octavesCount = 4;
 var minMaxOctave = {mario:[43, 84]};
 var lowerOctaveFor = 2;
-var songs = ['mario'];
 
 var positionArray = [0];
 
 var points = 0;
 var songName;
+//TODO ko menjaš roke naj se predvajata obe, ampak igraš samo eno!!
+var level;
+var levelData = {
+	0: {songName: 'mario', waitForKeys: true, bothHands: false, midiChannels: [-1, 2], playEveryNthTone: 2, startingTone: 1},//2- right, 3-left
+	1: {songName: 'mario', waitForKeys: true, bothHands: false, midiChannels: [-1, 2], playEveryNthTone: 1, startingTone: 0},
+	2: {songName: 'mario', waitForKeys: true, bothHands: false, midiChannels: [3, -1], playEveryNthTone: 1, startingTone: 0},
+	3: {songName: 'mario', waitForKeys: true, bothHands: true, midiChannels: [3, 2], playEveryNthTone: 1, startingTone: 0},
+	4: {songName: 'mario', waitForKeys: false, bothHands: false, midiChannels: [-1, 2], playEveryNthTone: 1, startingTone: 0}
+}
 
-function init(level) {
-    songName = songs[level];
+function init(l) {
+	level = l;
+    songName = levelData[level].songName;
+    waitForKeys = levelData[level].waitForKeys;
+
 }
 
 function create(){
 	game.stage.backgroundColor = '#124184';
 	game.physics.startSystem(Phaser.Physics.ARCADE);
 	//game.stage.disableVisibilityChange = true;//ko greš iz okna se igra nadaljuje
-	
+
+    addMenuOption('Naslednji nivo: ' + (level + 1), function (target) {
+        game.paused = false;
+    	game.state.start('play', true, false, level+1);
+    });
+
+    var sheet = game.add.sprite(game.world.width-(game.cache.getImage('mario-sheet-1').width * 0.85), 100, 'mario-sheet-1');
+    sheet.scale.set(0.85);
+	// console.log(game.world.width,game.cache.getImage('mario-sheet-1').wi)
+
 	position = 0;
 
 	keys = game.add.group();
@@ -61,8 +82,8 @@ function create(){
 	    				keyType==1 ? 'black-key' : 
 	    				keyType==2 ? 'middle-key' : 'right-key');	
 		 	keyData = game.cache.getImage(keyName);
-		 	keyHeight = keyData.height;
-			var key = keys.create(position,game.world.height-keyHeight,keyName);
+		 	var whiteKeyHeight = keyData.height;
+			var key = keys.create(position,game.world.height-whiteKeyHeight,keyName);
 
 			textColor = keyType == 1 ? '#fff' : '#000';
 			game.add.text(key.x + 5,key.y + 10, keyboardKeys[index], {fill: textColor});
@@ -77,7 +98,7 @@ function create(){
 			//key.scale.setTo(0.5);
 
 			graphics.moveTo(position-1,0);//moving position of graphic if you draw mulitple lines
-	  		graphics.lineTo(position-1,game.world.height-keyHeight);
+	  		graphics.lineTo(position-1,game.world.height-whiteKeyHeight);
 
 			position += keyData.width;
 			positionArray.push(position);
@@ -87,7 +108,7 @@ function create(){
 		}
 	}
 	graphics.moveTo(position-1,0);//moving position of graphic if you draw mulitple lines
-  	graphics.lineTo(position-1,game.world.height-keyHeight/2);
+  	graphics.lineTo(position-1,game.world.height-whiteKeyHeight/2);
 
 	notes = game.add.group();
 	notes.enableBody = true;
@@ -107,12 +128,12 @@ function create(){
   			points++;
   		}
   		
-  		//audio.play('Tone' + game.rnd.integerInRange(0,88));
+  		audio.play('Tone' + game.rnd.integerInRange(0,88));
   		//28 je MIDDLE C
   		keyNumber = keyboardKeys.indexOf(e);
 
-  		console.log(getOctaveNumber(minMaxOctave[song][0]-(lowerOctaveFor*8)) + keyNumber);
-  		audio.play('Tone' + (keyNumber + getOctaveNumber(minMaxOctave[song][0]-(lowerOctaveFor*8))));
+  		// console.log(getOctaveNumber(minMaxOctave[songName][0]-(lowerOctaveFor*8)) + keyNumber);
+  		audio.play('Tone' + (keyNumber + getOctaveNumber(minMaxOctave[songName][0]-(lowerOctaveFor*8))));
 
   	};
 
@@ -127,7 +148,7 @@ function create(){
   		keys.children[keyToUncolor].tint = 0xffffff;
   	};
 
-  	waitForKeys = false;
+  	// waitForKeys = false;
   	toggleMode = game.add.text(game.world.width - 120, 20, 'Čakaj: NE', { font: '24px Arial', fill: '#fff' });
     toggleMode.inputEnabled = true;
     toggleMode.events.onInputUp.add(function () {
@@ -147,49 +168,49 @@ function create(){
     } 
 
 
-    //read MIDIq
-    MidiConvert.load("assets/aud/mario.mid", function(midi) {
-  		
+    //read MIDI
+    MidiConvert.load("assets/aud/"+songName+".mid", function(midi) {
 
-		
-    	console.log(midi)
-		//midi = [1,2,3,4,5,6,7];
-		//audio.onStop.add(playNext, this, 0, midi.tracks[6].notes);
-
-		// for (var i = 0; i<midi.tracks.length;i++) {
-		// 	console.log(midi.tracks[i].name, midi.tracks[i].notes.length);
-		// 	track = midi.tracks[i];
-		// 	if (i == 2) {
-		// 		game.time.events.repeat(1000 * 0.3, 1000, playNext, this, track.notes);
-		// 	}
-
-		// }
-
-			max = -1;
-			min = 89;//55-18 = 37 84-36=66
-		for (var j = 2; j<=3;j++){
-			midiNotes = midi.tracks[j].notes;
-			tint = j== 2 ? 0xff00ff : 0xffff00;
-			for (var i = 0; i<midiNotes.length;i++) {
+    	// console.log(midi,fromMarker)
+		var max = -1;
+		var min = 89;//55-18 = 37 84-36=66
+        // 0: {songName: 'mario', bothHands: false, midiChannels: [2], playEveryNthTone: 2},
+		var midiChannels = levelData[level].midiChannels;
+		var playEveryNthTone = levelData[level].playEveryNthTone;
+		var startingTone = levelData[level].startingTone;
+		for (var j = 0; j<midiChannels.length;j++){
+			var channelIndex = midiChannels[j];
+			if (channelIndex == -1) continue;
+			midiNotes = midi.tracks[channelIndex].notes;
+			tint = j== 0 ? 0xffff00 : 0xff00ff; //yellow : purple
+			for (var i = startingTone; i<midiNotes.length;i=i+playEveryNthTone) {
 			
 				if (midiNotes[i].midi > max) max = midiNotes[i].midi;
 				if (midiNotes[i].midi < min) min = midiNotes[i].midi;
-				game.time.events.add(700* (midiNotes[i].time), function(midiNote, tint){
-					
-					audio.play('Tone' + (midiNote.midi-(lowerOctaveFor*8)));
+				game.time.events.add(500* (midiNotes[i].time), function(midiNote, tint){
+
+					if (!waitForKeys){
+                        audio.play('Tone' + (midiNote.midi-(lowerOctaveFor*8)));
+					}
 
 					positionNum = positionArray[midiNote.midi - getOctaveNumber(minMaxOctave[songName][0])] ;
-					console.log('Tone' + (midiNote.midi-(lowerOctaveFor*8)));
-					var note = notes.create(positionNum, 580, sizeMidiMap[
-						(midiNote.midi-(lowerOctaveFor*8))]);
+					 // console.log('Tone' + (midiNote.midi-(lowerOctaveFor*8)));
+
+					//spodnja se uporabi ko se toni premikajo navzgor
+					// var note = notes.create(positionNum, game.height-whiteKeyHeight-(whiteKeyHeight/10),	sizeMidiMap[(midiNote.midi-(lowerOctaveFor*8))]);
+                    var note = notes.create(positionNum, 0, sizeMidiMap[(midiNote.midi-(lowerOctaveFor*8))]);
+
+                    // console.log(note.name)
 					note.scale.setTo(1, 0.1);
 					game.physics.arcade.enable(note);
-					note.body.velocity.y = -70;
+					note.body.velocity.y = 100;
 					note.body.collideWorldBounds = false;
 					
 					note.tint = tint;
 					note.name = "note" + positionNum;
-					note.events.onKilled.add(function(note){notes.remove(note)},this);
+					note.events.onKilled.add(function(note){
+						notes.remove(note)
+					},this);
 					
 					
 
@@ -200,12 +221,16 @@ function create(){
 			}
 		
 		}
-		console.log(min, max);
+		// console.log(min, max);
 		
    	});
 
   	
 
+}
+
+function playMario() {
+	
 }
 
 function getOctaveNumber(min){
@@ -219,18 +244,20 @@ function getOctaveNumber(min){
 var appearanceTime = 0;
 var noteToKill;
 function update (){
-	
+
 	//game.physics.arcade.collide(notes, keys);
 	game.physics.arcade.collide(notes, keys, 
 		function(note, keys){ 
 			if (waitForKeys){
-				game.paused = true;
+				 game.paused = true;
+				// game.physics.arcade.isPaused = true;
 				keyToPress = keyboardKeys[note.name.substring(4)];
+                // console.log("colli: " + note.name);
 				noteToKill = note;
-				//console.log(keyCode[keyToPress]);
+				// console.log(game.physics);
 
 			} else {
-				//note.kill(); 
+				note.kill();
 			}
 			
 		}, null, this);
@@ -246,4 +273,22 @@ function update (){
 
 }
 
+function addMenuOption(text, callback) {
+    var optionStyle = { font: '25pt menuFont', fill: 'white', align: 'right', stroke: 'rgba(0,0,0,0)', strokeThickness: 4};
+    var txt = game.add.text(game.world.width-220, 300, text, optionStyle);
+    var onOver = function (target) {
+        target.fill = "##E9E91A";
+        target.stroke = "rgba(200,200,200,0.5)";
+    };
+    var onOut = function (target) {
+        target.fill = "white";
+        target.stroke = "rgba(0,0,0,0)";
+    };
+    txt.stroke = "rgba(0,0,0,0";
+    txt.strokeThickness = 4;
+    txt.inputEnabled = true;
+    txt.events.onInputUp.add(callback);
+    txt.events.onInputOver.add(onOver);
+    txt.events.onInputOut.add(onOut);
+    }
 
