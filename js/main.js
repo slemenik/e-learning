@@ -52,6 +52,7 @@ function init(l) {
 }
 
 function create(){
+    navigator.requestMIDIAccess().then( onsuccesscallback, onerrorcallback );
 	game.stage.backgroundColor = '#124184';
 	game.physics.startSystem(Phaser.Physics.ARCADE);
 	//game.stage.disableVisibilityChange = true;//ko greš iz okna se igra nadaljuje
@@ -96,7 +97,7 @@ function create(){
 			key.inputEnabled = true;
 			//key.events.onInputDown.add( listener, key );
 			key.name = "key" + i;
-			console.log(key.name);
+			// console.log(key.name);
 			//key.scale.setTo(0.5);
 
 			graphics.moveTo(position-1,0);//moving position of graphic if you draw mulitple lines
@@ -126,13 +127,14 @@ function create(){
 
   		if (waitForKeys && e==keyToPress)   {
   			game.paused = false;
+            game.physics.arcade.isPaused = false;
   			noteToKill.kill();
   			points++;
   		} else if(waitForKeys && e != keyToPress){
   			points--;
 		}
         pointsText.text = 'Točke: ' + points;
-  		audio.play('Tone' + game.rnd.integerInRange(0,88));
+  		// audio.play('Tone' + game.rnd.integerInRange(0,88));
   		//28 je MIDDLE C
   		keyNumber = keyboardKeys.indexOf(e);
 
@@ -175,7 +177,7 @@ function create(){
     //read MIDI
     MidiConvert.load("assets/aud/"+songName+".mid", function(midi) {
 
-    	// console.log(midi,fromMarker)
+    	console.log(midi)
 		var max = -1;
 		var min = 89;//55-18 = 37 84-36=66
         // 0: {songName: 'mario', bothHands: false, midiChannels: [2], playEveryNthTone: 2},
@@ -193,6 +195,7 @@ function create(){
 				if (midiNotes[i].midi < min) min = midiNotes[i].midi;
 				game.time.events.add(500* (midiNotes[i].time), function(midiNote, tint){
 
+					// while (game.physics.arcade.isPaused == true){}
 					if (!waitForKeys){
                         audio.play('Tone' + (midiNote.midi-(lowerOctaveFor*8)));
 					}
@@ -254,10 +257,10 @@ function update (){
 	//game.physics.arcade.collide(notes, keys);
 	game.physics.arcade.collide(notes, keys, 
 		function(note, keys){
-		console.log(note,keys);
+		// console.log(note,keys);
 			if (waitForKeys){
-				 game.paused = true;
-				// game.physics.arcade.isPaused = true;
+				 // game.paused = true;
+				game.physics.arcade.isPaused = true;
 				keyToPress = keyboardKeys[note.name.substring(4)];
                 // console.log("colli: " + (note.name.substring(4)%12));
 				noteToKill = note;
@@ -299,3 +302,27 @@ function addMenuOption1(text, callback) {
     txt.events.onInputOut.add(onOut);
 }
 
+function onsuccesscallback( access ) {
+    access.inputs.values().next().value.onmidimessage = myMIDIMessagehandler; // inputs = MIDIInputMaps, you can retrieve the inputs with iterators
+}
+
+function onerrorcallback( err ) {
+    console.log(err);
+}
+
+function myMIDIMessagehandler(event){
+    var data = event.data,
+        cmd = data[0] >> 4,
+        channel = data[0] & 0xf,
+        type = data[0], // ignore [inconsistent between devices]
+        note = data[1],
+        velocity = data[2];
+	console.log(data,cmd,channel,type,note,velocity)
+    if (velocity) {
+        // noteOn(note, velocity);
+        audio.play('Tone' + event.data[1]);
+    }
+    else{
+        // noteOff(note, velocity);
+    }
+}
