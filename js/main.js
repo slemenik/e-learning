@@ -31,7 +31,6 @@ var minMaxOctave = {mario:[43, 84]};
 var lowerOctaveFor = 2;
 
 var positionArray = [0];
-
 var points = 0;
 var songName;
 //TODO ko menjaš roke naj se predvajata obe, ampak igraš samo eno!!
@@ -44,8 +43,6 @@ var levelData = {
 	4: {songName: 'mario', waitForKeys: false, bothHands: false, midiChannels: [-1, 2], playEveryNthTone: 1, startingTone: 0}
 }
 
-var midiNotesDelays = [];
-
 function init(l) {
 	level = l;
     songName = levelData[level].songName;
@@ -53,12 +50,20 @@ function init(l) {
 
 }
 
+var noteAppearsTimeEvents;
+
 function create(){
+
 	//check if browser is google chrome
     var is_chrome = navigator.userAgent.toLowerCase().indexOf('chrome') > -1;
     if (is_chrome) navigator.requestMIDIAccess().then( onsuccesscallback, onerrorcallback );
+
 	game.stage.backgroundColor = '#124184';
 	game.physics.startSystem(Phaser.Physics.ARCADE);
+    game.physics.arcade.isPaused = false;
+    game.paused = false;
+    game.time.events.resume();
+    // waitForKeys = false;
 	//game.stage.disableVisibilityChange = true;//ko greš iz okna se igra nadaljuje
 
     addMenuOption1('Naslednji nivo: ' + (level + 1), function (target) {
@@ -132,6 +137,7 @@ function create(){
   		if (waitForKeys && e==keyToPress)   {
   			game.paused = false;
             game.physics.arcade.isPaused = false;
+            game.time.events.resume();
   			noteToKill.kill();
   			points++;
   		} else if(waitForKeys && e != keyToPress){
@@ -194,10 +200,10 @@ function create(){
 			midiNotes = midi.tracks[channelIndex].notes;
 			tint = j== 0 ? 0xffff00 : 0xff00ff; //yellow : purple
 			for (var i = startingTone; i<midiNotes.length;i=i+playEveryNthTone) {
-			
+			    // if(i==3) console.log(midiNotes[i]./time);
 				// if (midiNotes[i].midi > max) max = midiNotes[i].midi;
 				// if (midiNotes[i].midi < min) min = midiNotes[i].midi;
-				game.time.events.add(500* (midiNotes[i].time), function(midiNote, tint){
+                game.time.events.add(800* (midiNotes[i].time), function(midiNote, tint){
 
 					// while (game.physics.arcade.isPause+d == true){}
 
@@ -227,6 +233,7 @@ function create(){
 					},this);
 
 				}, this, midiNotes[i], tint);
+                // console.log(noteAppearsTimeEvents);
 			}
 		
 		}
@@ -257,12 +264,14 @@ function update (){
 		function(note, keys){
 		// console.log(note,keys);
 			if (waitForKeys){
-				 // game.paused = true;
 				game.physics.arcade.isPaused = true;
 				keyToPress = keyboardKeys[note.name.substring(4)];
                 // console.log("colli: " + (note.name.substring(4)%12));
 				noteToKill = note;
-				// console.log(game.physics);
+                // game.time.events.add(800, function(midiNote, tint){
+                    game.time.events.pause();
+                // }, this);
+
 
 			} else {
 				note.kill();
