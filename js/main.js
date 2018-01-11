@@ -44,6 +44,8 @@ var levelData = {
 	4: {songName: 'mario', waitForKeys: false, bothHands: false, midiChannels: [-1, 2], playEveryNthTone: 1, startingTone: 0}
 }
 
+var midiNotesDelays = [];
+
 function init(l) {
 	level = l;
     songName = levelData[level].songName;
@@ -52,7 +54,9 @@ function init(l) {
 }
 
 function create(){
-    navigator.requestMIDIAccess().then( onsuccesscallback, onerrorcallback );
+	//check if browser is google chrome
+    var is_chrome = navigator.userAgent.toLowerCase().indexOf('chrome') > -1;
+    if (is_chrome) navigator.requestMIDIAccess().then( onsuccesscallback, onerrorcallback );
 	game.stage.backgroundColor = '#124184';
 	game.physics.startSystem(Phaser.Physics.ARCADE);
 	//game.stage.disableVisibilityChange = true;//ko greš iz okna se igra nadaljuje
@@ -178,8 +182,8 @@ function create(){
     MidiConvert.load("assets/aud/"+songName+".mid", function(midi) {
 
     	console.log(midi)
-		var max = -1;
-		var min = 89;//55-18 = 37 84-36=66
+		// var max = -1;
+		// var min = 89;//55-18 = 37 84-36=66
         // 0: {songName: 'mario', bothHands: false, midiChannels: [2], playEveryNthTone: 2},
 		var midiChannels = levelData[level].midiChannels;
 		var playEveryNthTone = levelData[level].playEveryNthTone;
@@ -191,11 +195,12 @@ function create(){
 			tint = j== 0 ? 0xffff00 : 0xff00ff; //yellow : purple
 			for (var i = startingTone; i<midiNotes.length;i=i+playEveryNthTone) {
 			
-				if (midiNotes[i].midi > max) max = midiNotes[i].midi;
-				if (midiNotes[i].midi < min) min = midiNotes[i].midi;
+				// if (midiNotes[i].midi > max) max = midiNotes[i].midi;
+				// if (midiNotes[i].midi < min) min = midiNotes[i].midi;
 				game.time.events.add(500* (midiNotes[i].time), function(midiNote, tint){
 
-					// while (game.physics.arcade.isPaused == true){}
+					// while (game.physics.arcade.isPause+d == true){}
+
 					if (!waitForKeys){
                         audio.play('Tone' + (midiNote.midi-(lowerOctaveFor*8)));
 					}
@@ -220,18 +225,11 @@ function create(){
 					note.events.onKilled.add(function(note){
 						notes.remove(note)
 					},this);
-					
-					
 
-
-					//console.log(midiNote);
-					//if (audio._sound) audio._sound.playbackRate.value = 3;
 				}, this, midiNotes[i], tint);
 			}
 		
 		}
-		// console.log(min, max);
-		
    	});
 
   	
