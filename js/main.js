@@ -6,7 +6,7 @@ function preload(){
 	game.load.image('right-key', 'assets/img/right-small.png');
 	game.load.image('middle-key', 'assets/img/middle-small.png');
 	game.load.image('black-key', 'assets/img/black.png');
-	game.load.image('mario-sheet-1', 'assets/img/mario1.PNG');
+	game.load.image('mario-sheet-1', 'assets/img/mario2.PNG');
 	game.load.audio('audio', 'assets/aud/audio.mp3' );
 }
 
@@ -40,7 +40,7 @@ var levelData = {
 	1: {songName: 'mario', waitForKeys: true, bothHands: false, midiChannels: [-1, 2], playEveryNthTone: 1, startingTone: 0},
 	2: {songName: 'mario', waitForKeys: true, bothHands: false, midiChannels: [3, -1], playEveryNthTone: 1, startingTone: 0},
 	3: {songName: 'mario', waitForKeys: true, bothHands: true, midiChannels: [3, 2], playEveryNthTone: 1, startingTone: 0},
-	4: {songName: 'mario', waitForKeys: false, bothHands: false, midiChannels: [-1, 2], playEveryNthTone: 1, startingTone: 0}
+	4: {songName: 'mario', waitForKeys: false, bothHands: false, midiChannels: [3, 2], playEveryNthTone: 1, startingTone: 0}
 }
 
 function init(l) {
@@ -67,12 +67,23 @@ function create(){
     // waitForKeys = false;
 	//game.stage.disableVisibilityChange = true;//ko greš iz okna se igra nadaljuje
 
-    addMenuOption1('Naslednji nivo: ' + (level + 1), function (target) {
-        game.paused = false;
-    	game.state.start('play', true, false, level+1);
-    });
+    if (level<4){
+        addMenuOption1('Naslednji nivo >', function (target) {
+            game.paused = false;
+            game.state.start('play', true, false, level+1);
+        }, 300);
+    }
 
-    var sheet = game.add.sprite(game.world.width-(game.cache.getImage('mario-sheet-1').width * 0.85), 100, 'mario-sheet-1');
+    if (level>0) {
+        addMenuOption1('< Prejšnji nivo ', function (target) {
+            game.paused = false;
+            game.state.start('play', true, false, level-1);
+        }, 550);
+    }
+
+    pointsText = game.add.text(game.world.width-400, 750, 'Nivo št.: ' + (level +1), { font: '40pt menuFont', fill: '#fff' });
+
+    var sheet = game.add.sprite(game.world.width-(game.cache.getImage('mario-sheet-1').width * 0.9), 100, 'mario-sheet-1');
     sheet.scale.set(0.85);
 	// console.log(game.world.width,game.cache.getImage('mario-sheet-1').wi)
 
@@ -164,14 +175,14 @@ function create(){
   	};
 
   	// waitForKeys = false;
-  	toggleMode = game.add.text(game.world.width - 120, 20, 'Čakaj: NE', { font: '24px Arial', fill: '#fff' });
-    toggleMode.inputEnabled = true;
-    toggleMode.events.onInputUp.add(function () {
-    	waitForKeys = !waitForKeys;
-    	toggleMode.text = waitForKeys ? 'Čakaj: DA' : 'Čakaj: NE';
-    });
+  	// toggleMode = game.add.text(game.world.width - 120, 20, 'Čakaj: NE', { font: '24px Arial', fill: '#fff' });
+    // toggleMode.inputEnabled = true;
+    // toggleMode.events.onInputUp.add(function () {
+    // 	waitForKeys = !waitForKeys;
+    // 	toggleMode.text = waitForKeys ? 'Čakaj: DA' : 'Čakaj: NE';
+    // });
 
-    pointsText = game.add.text(game.world.width-120, 50, 'Točke: 0', { font: '24px Arial', fill: '#fff' });
+    pointsText = game.add.text(game.world.width-120, 50, 'Točke: 0', { font: '24px menuFont', fill: '#fff' });
 
     audio = game.add.audio('audio');
     audio.allowMultiple = true;
@@ -278,9 +289,9 @@ function update (){
 
 }
 
-function addMenuOption1(text, callback) {
+function addMenuOption1(text, callback, xPosition) {
     var optionStyle = { font: '25pt menuFont', fill: 'white', align: 'right', stroke: 'rgba(0,0,0,0)', strokeThickness: 4};
-    var txt = game.add.text(game.world.width-220, 300, text, optionStyle);
+    var txt = game.add.text(game.world.width-xPosition, game.world.height-125, text, optionStyle);
     var onOver = function (target) {
         target.fill = "##E9E91A";
         target.stroke = "rgba(200,200,200,0.5)";
