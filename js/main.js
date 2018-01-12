@@ -23,7 +23,7 @@ var keyboardKeys = [' ',' ',' ',' ',' ','1','2','3','4','5','6','7','8','9','0',
 					'i','o','p','a','s','d','f','g','h','j','k','l','c','v','b','n','m', ',','.','-'];
 var pianoKeys = ['C','C#', 'D', 'D#','E','F', 'F#','G', 'G#', 'A', 'A#', 'H'];
 var waitForKeys;
-var keyToPress;
+var keysToPress = [];
 var sizeMidiMap = {};
 
 var octavesCount = 4;
@@ -46,6 +46,7 @@ var levelData = {
 function init(l) {
 	level = l;
     songName = levelData[level].songName;
+    // waitForKeys = false
     waitForKeys = levelData[level].waitForKeys;
 
 }
@@ -100,14 +101,13 @@ function create(){
 			game.add.text(key.x + 5,key.y + 80, pianoKeys[i%12], {fill: textColor, font: "bold 16px Arial"});//cdefg
 			game.add.text(key.x + 5,key.y + 120, 
 				getOctaveNumber(minMaxOctave[songName][0]-(lowerOctaveFor*8))+ index, {font: "bold 16px Arial"});//24,25,26
-				// console.log(lowerOctaveFor);
+
 			sizeMidiMap[(getOctaveNumber(minMaxOctave[songName][0]-(lowerOctaveFor*8))+ index)] = keyName;
 
 			key.inputEnabled = true;
 			//key.events.onInputDown.add( listener, key );
 			key.name = "key" + i;
-			// console.log(key.name);
-			//key.scale.setTo(0.5);
+
 
 			graphics.moveTo(position-1,0);//moving position of graphic if you draw mulitple lines
 	  		graphics.lineTo(position-1,game.world.height-whiteKeyHeight);
@@ -124,23 +124,23 @@ function create(){
 
 	notes = game.add.group();
 	notes.enableBody = true;
-	// console.log(positionArray);
-	
-	//for(var i = 0; i < 15;);
 
-	//var line = new Phaser.Line(0, 0, 100, 100);
-  	//var graphics=game.add.graphics(0,0);
+
   	cursors = game.input.keyboard.createCursorKeys(); 
   	this.game.input.keyboard.onPressCallback = function(e) {
-  		// console.log(e);
-
-  		if (waitForKeys && e==keyToPress)   {
-  			game.paused = false;
-            game.physics.arcade.isPaused = false;
-            game.time.events.resume();
-  			noteToKill.kill();
+		var indexOf = keysToPress.indexOf(e);
+  		if (waitForKeys && indexOf != -1)   {
+            keysToPress.splice(indexOf, 1);
+            if (keysToPress.length < 1){
+                game.paused = false;
+                game.physics.arcade.isPaused = false;
+                game.time.events.resume();
+			}
+            // console.log(notesToKill);//
+  			notesToKill[indexOf].kill();
+            notesToKill.splice(indexOf, 1);
   			points++;
-  		} else if(waitForKeys && e != keyToPress){
+  		} else if(waitForKeys && indexOf == -1){
   			points--;
 		}
         pointsText.text = 'Točke: ' + points;
@@ -148,7 +148,6 @@ function create(){
   		//28 je MIDDLE C
   		keyNumber = keyboardKeys.indexOf(e);
 
-  		// console.log(getOctaveNumber(minMaxOctave[songName][0]-(lowerOctaveFor*8)) + keyNumber);
   		audio.play('Tone' + (keyNumber + getOctaveNumber(minMaxOctave[songName][0]-(lowerOctaveFor*8))));
 
   	};
@@ -187,9 +186,9 @@ function create(){
     //read MIDI
     MidiConvert.load("assets/aud/"+songName+".mid", function(midi) {
 
-    	console.log(midi)
-		// var max = -1;
-		// var min = 89;//55-18 = 37 84-36=66
+    	// console.log(midi)
+		var max = -1;
+		var min = 89;//55-18 = 37 84-36=66
         // 0: {songName: 'mario', bothHands: false, midiChannels: [2], playEveryNthTone: 2},
 		var midiChannels = levelData[level].midiChannels;
 		var playEveryNthTone = levelData[level].playEveryNthTone;
@@ -201,25 +200,18 @@ function create(){
 			tint = j== 0 ? 0xffff00 : 0xff00ff; //yellow : purple
 			for (var i = startingTone; i<midiNotes.length;i=i+playEveryNthTone) {
 			    // if(i==3) console.log(midiNotes[i]./time);
-				// if (midiNotes[i].midi > max) max = midiNotes[i].midi;
-				// if (midiNotes[i].midi < min) min = midiNotes[i].midi;
+				if (midiNotes[i].midi > max) max = midiNotes[i].midi;
+				if (midiNotes[i].midi < min) min = midiNotes[i].midi;
                 game.time.events.add(800* (midiNotes[i].time), function(midiNote, tint){
-
-					// while (game.physics.arcade.isPause+d == true){}
 
 					if (!waitForKeys){
                         audio.play('Tone' + (midiNote.midi-(lowerOctaveFor*8)));
 					}
 
 					positionNum = positionArray[midiNote.midi - getOctaveNumber(minMaxOctave[songName][0])] ;
-					// console.log(positionNum);
-					 // console.log('Tone' + (midiNote.midi-(lowerOctaveFor*8)));
-
-					//spodnja se uporabi ko se toni premikajo navzgor
-					// var note = notes.create(positionNum, game.height-whiteKeyHeight-(whiteKeyHeight/10),	sizeMidiMap[(midiNote.midi-(lowerOctaveFor*8))]);
                     var note = notes.create(positionNum, 0, sizeMidiMap[(midiNote.midi-(lowerOctaveFor*8))]);
 
-
+					// note.immovable = true;
 					note.scale.setTo(1, 0.2);
 					game.physics.arcade.enable(note);
 					note.body.velocity.y = 150;
@@ -237,14 +229,11 @@ function create(){
 			}
 		
 		}
+		// console.log(min,max)
    	});
 
   	
 
-}
-
-function playMario() {
-	
 }
 
 function getOctaveNumber(min){
@@ -255,20 +244,24 @@ function getOctaveNumber(min){
 	return 0;
 }
 
-var appearanceTime = 0;
-var noteToKill;
+var notesToKill = [];
+var pianoKeysToPress = [];
 function update (){
 
 	//game.physics.arcade.collide(notes, keys);
 	game.physics.arcade.collide(notes, keys, 
 		function(note, keys){
-		// console.log(note,keys);
+			console.log(note.name);
+
 			if (waitForKeys){
-				game.physics.arcade.isPaused = true;
-				keyToPress = keyboardKeys[note.name.substring(4)];
-                // console.log("colli: " + (note.name.substring(4)%12));
-				noteToKill = note;
-                // game.time.events.add(800, function(midiNote, tint){
+				keysToPress.push(keyboardKeys[note.name.substring(4)]);
+                pianoKeysToPress.push(parseInt(note.name.substring(4)) + 24);
+				// console.log(note)
+				notesToKill.push(note);
+				// note.scale.setTo(1,0.5);
+				// keys.bringToTop();
+                // game.time.events.add(100, function(){
+                	game.physics.arcade.isPaused = true;
                     game.time.events.pause();
                 // }, this);
 
@@ -278,11 +271,6 @@ function update (){
 			}
 			
 		}, null, this);
-	if (game.time.now > appearanceTime) {
-            
-            
-
-    }
 
     pointsText.text = 'Točke: ' + points;
 
@@ -324,12 +312,29 @@ function myMIDIMessagehandler(event){
         type = data[0], // ignore [inconsistent between devices]
         note = data[1],
         velocity = data[2];
-	console.log(data,cmd,channel,type,note,velocity)
     if (velocity) {
-        // noteOn(note, velocity);
-        audio.play('Tone' + event.data[1]);
+        keyToColor = note-24;
+        keys.children[keyToColor].tint = 0xf10f2f;
+        var indexOf = pianoKeysToPress.indexOf(note);
+        if (waitForKeys && indexOf != -1)   {
+            pianoKeysToPress.splice(indexOf, 1);
+            if (pianoKeysToPress.length < 1){
+                game.paused = false;
+                game.physics.arcade.isPaused = false;
+                game.time.events.resume();
+			}
+
+            notesToKill[indexOf].kill();
+            notesToKill.splice(indexOf, 1);
+            points++;
+        } else if(waitForKeys &&  indexOf == -1){
+            points--;
+        }
+        pointsText.text = 'Točke: ' + points;
+        audio.play('Tone' + note);
     }
     else{
-        // noteOff(note, velocity);
+        keyToUncolor = note-24;
+        keys.children[keyToUncolor].tint = 0xffffff;
     }
 }
