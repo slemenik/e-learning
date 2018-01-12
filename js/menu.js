@@ -1,5 +1,6 @@
 var menuState = { create: create, init:init, preload: preload};
 
+var instructionsText;
 function create() {
 
     var sprite = game.add.sprite(0, 0, 'menu-bg');
@@ -9,10 +10,15 @@ function create() {
     addMenuOption('Začni', function (target) {
         game.state.start('play', true, false, 0);
     });
-    addMenuOption('Izberi stopnjo', function (target) {
-    });
-    addMenuOption('Navodila', function (target) {
-    });
+    // addMenuOption('Izberi stopnjo', function (target) {
+    // });
+    // addMenuOption('Navodila', function (target) {
+
+    // });
+
+    var optionStyle = { font: '25pt menuFont', fill: 'white', align: 'center', stroke: 'rgba(0,0,0,0)', strokeThickness: 4};
+    instructionsText = game.add.text(game.world.width/2-520, 200, instructionsString, optionStyle);
+
 }
 
 function init() {
@@ -25,14 +31,15 @@ function init() {
         align: 'center'
     });
     this.titleText.anchor.set(0.5);
-    game.state.start('play', true, false, 0);//temp
+    // game.state.start('play', true, false, 0);//temp
 }
 
 function preload() {
     game.load.image('menu-bg', 'assets/img/main-menu-background.jpg');
 }
 
-var optionCount = 1;
+var optionCount = 4;
+
 function addMenuOption(text, callback) {
     var optionStyle = { font: '50pt menuFont', fill: 'white', align: 'right', stroke: 'rgba(0,0,0,0)', strokeThickness: 4};
     var txt = game.add.text(game.world.width/2-100, (this.optionCount * 100) + 200, text, optionStyle);
@@ -52,3 +59,11 @@ function addMenuOption(text, callback) {
     txt.events.onInputOut.add(onOut);
     optionCount++;
 }
+
+var instructionsString =
+    "Naučite se igrati klavirja s pomočjo klasične melodije Super Mario!\n\n" +
+    "Igra ima pet stopenj, vsaka pa je težja od prejšnje. Na začetku se igra\n" +
+    "le z desno roko, nato samo z levo, za konec pa se obe roke združita v\n" +
+    "isti melodiji. Za večjo motivacijo so ob strani zapisane točke, ki jih\n" +
+    "dobiš ob pravilnem pritisku na tipko in izgubiš, ko pritisneš na napačno.\n\n" +
+    "Za boljšo izkušnjo vklopi USB MIDI Keyboard in odpri igrico v Google Chromu.";
